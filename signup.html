@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Signup - StockMaster</title>
+  <!-- uses the login.css you provided -->
+  <link rel="stylesheet" href="login&signup.css" />
+</head>
+<body>
+  <div class="center-wrap">
+    <div class="card">
+      <!-- logo from uploaded file (local path)
+      <img src="/mnt/data/2330ee37-cf3d-44c9-b39f-ee7419897814.png" class="logo" alt="logo" style="width:90px;height:60px;object-fit:contain;margin-bottom:8px;border-radius:6px;"/> -->
+
+      <h2>Create Account</h2>
+
+      <!-- fields matching your requested names/style -->
+      <div class="input"><input id="loginId" type="text" placeholder="Enter Login ID" /></div>
+      <div class="input"><input id="email" type="email" placeholder="Enter Email ID" /></div>
+      <div class="input"><input id="password" type="password" placeholder="Enter Password" /></div>
+      <div class="input"><input id="confirm" type="password" placeholder="Re-Enter Password" /></div>
+
+      <button class="btn" onclick="signup()">SIGN UP</button>
+
+      <div class="msg" id="msg"></div>
+
+      <div class="helper">Already have an account? <a href="login.html">Login</a></div>
+    </div>
+  </div>
+
+  <script>
+    async function signup() {
+      const loginId = document.getElementById("loginId").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const confirm = document.getElementById("confirm").value;
+      const msgEl = document.getElementById("msg");
+      msgEl.textContent = "";
+
+      if (!loginId || !email || !password || !confirm) {
+        msgEl.textContent = "Please fill all fields.";
+        return;
+      }
+      if (password.length < 8) {
+        msgEl.textContent = "Password must be at least 8 characters.";
+        return;
+      }
+      if (password !== confirm) {
+        msgEl.textContent = "Passwords do not match.";
+        return;
+      }
+      if (!/^\S+@\S+\.\S+$/.test(email)) {
+        msgEl.textContent = "Enter a valid email address.";
+        return;
+      }
+
+      // map loginId -> name as your backend expects SignupRequest.name
+      const body = {
+        name: loginId,
+        email: email,
+        phone: "",
+        password: password,
+        role: ""
+      };
+
+      try {
+        const res = await fetch("http://localhost:8080/api/v1/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+          // try parse json message, then fallback to text
+          let errText = "";
+          try { const j = await res.json(); errText = j.message || JSON.stringify(j); } catch(e) {}
+          if (!errText) {
+            try { errText = await res.text(); } catch(e) {}
+          }
+          msgEl.textContent = errText || "Signup failed.";
+          return;
+        }
+
+        alert("Signup successful! Please login.");
+        window.location.href = "login.html";
+      } catch (err) {
+        console.error(err);
+        msgEl.textContent = "Network error — check backend.";
+      }
+    }
+  </script>
+</body>
+</html>
